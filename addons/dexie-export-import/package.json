@@ -1,5 +1,5 @@
 {
-  "name": "dexie-export-import",
+  "name": "@mitchemmc/dexie-export-import",
   "version": "1.0.0-rc.2",
   "description": "Dexie addon that adds export and import capabilities",
   "main": "dist/dexie-export-import.js",
