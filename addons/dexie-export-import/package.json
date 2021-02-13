@@ -53,6 +53,7 @@
     "typeson-registry": "^1.0.0-alpha.21"
   },
   "dependencies": {
-    "dexie": "^3.0.0-alpha.5 || ^2.0.4"
+    "dexie": "^3.0.0-alpha.5 || ^2.0.4",
+    "rollup-plugin-sourcemaps": "^0.6.3"
   }
 }
