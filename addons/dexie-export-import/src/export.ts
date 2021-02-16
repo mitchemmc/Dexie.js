@@ -141,18 +141,18 @@ export async function exportDB(db: Dexie, options?: ExportOptions): Promise<Blob
           const filteredValues = filter ?
             values.filter(value => filter(tableName, value)) :
             values;
-
-          const tsonValues = filteredValues.map(value => TSON.encapsulate(value));
-          if (TSON.mustFinalize()) {
-            await Dexie.waitFor(TSON.finalize(tsonValues));
+          if (filteredValues.length > 0) {
+            const tsonValues = filteredValues.map(value => TSON.encapsulate(value));
+            if (TSON.mustFinalize()) {
+              await Dexie.waitFor(TSON.finalize(tsonValues));
+            }
+            let json = JSON.stringify(tsonValues, undefined, prettyJson ? 2 : undefined);
+            if (prettyJson) json = json.split('\n').join('\n      ');
+  
+            // By generating a blob here, we give web platform the opportunity to store the contents
+            // on disk and release RAM.
+            slices.push(new Blob([json.substring(1, json.length - 1)]));
           }
-
-          let json = JSON.stringify(tsonValues, undefined, prettyJson ? 2 : undefined);
-          if (prettyJson) json = json.split('\n').join('\n      ');
-
-          // By generating a blob here, we give web platform the opportunity to store the contents
-          // on disk and release RAM.
-          slices.push(new Blob([json.substring(1, json.length - 1)]));
           lastNumRows = filteredValues.length;
           lastKey = values.length > 0 ?
             Dexie.getByKeyPath(values[values.length -1], primKey.keyPath as string) :
@@ -179,6 +179,17 @@ export async function exportDB(db: Dexie, options?: ExportOptions): Promise<Blob
             null;
         }
         progress.completedRows += values.length;
+      }
+      // Check for trailing comma from filtering and remove it
+      if (prettyJson) {
+        if (slices[slices.length - 1] === "\n      " && slices[slices.length - 2] === ",") {
+          slices.pop();
+          slices.pop();
+        }
+      } else {
+        if (slices[slices.length - 1] === ",") {
+          slices.pop();
+        }
       }
       slices.push(emptyTableExportJson.substr(posEndRowsArray)); // "]}"
       progress.completedTables += 1;
